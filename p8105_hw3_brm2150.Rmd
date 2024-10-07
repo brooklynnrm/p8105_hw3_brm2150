@@ -1,0 +1,17 @@
+---
+title: "p8105_hw3_brm2150"
+author: "Brooklynn McNeil"
+date: "2024-10-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  fig.width = 6,
+  fig.height = 6)
+
+library(tidyverse)
+```
+
+## Problem 
