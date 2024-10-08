@@ -23,18 +23,28 @@ Clean the `ny_noaa` data by separating the variables for year, month, and day. E
 ny_noaa_clean = 
   ny_noaa |>
   filter(!if_any(prcp:tmin, is.na)) |>
-  separate(date, into = c("year", "month", "day"), sep = "-") 
-
-ny_noaa_clean|>
-  head(n=50) |>
+  separate(date, into = c("year", "month", "day"), sep = "-") |>
   mutate(
-    prcp = prcp/2.54, 
+    prcp = prcp/254, 
     snow = snow/25.4, 
     snwd = snwd/25.4,
     tmax = as.numeric(tmax),
-    tmax = (tmax*10)*((9/5) +32),
+    tmax = ((tmax*0.1*9/5) + 32),
     tmin = as.numeric(tmin),
-    tmin = (tmin*10)*((9/5) + 32)
+    tmin = ((tmin*0.1*9/5) + 32)
     )
+```
+
+Make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
+```{r}
+ny_noaa_clean |>
+  filter(month == c("01", "07")) |>
+    mutate(
+    month = case_match(month, "01" ~ "January", "07" ~ "July")
+  ) |>
+  ggplot(aes(x = day, y = tmin, color = year)) +
+  #geom_point(alpha = 0.2) +
+  geom_smooth(se = FALSE, na.rm = TRUE) +
+  facet_grid(~month)
 ```
 
