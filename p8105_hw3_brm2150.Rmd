@@ -2,7 +2,7 @@
 title: "p8105_hw3_brm2150"
 author: "Brooklynn McNeil"
 date: "2024-10-07"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -12,6 +12,13 @@ knitr::opts_chunk$set(
   fig.height = 6)
 
 library(tidyverse)
+library(p8105.datasets)
+data("ny_noaa")
 ```
 
-## Problem 
+## Problem 1
+
+```{r}
+head(ny_noaa)
+```
+
