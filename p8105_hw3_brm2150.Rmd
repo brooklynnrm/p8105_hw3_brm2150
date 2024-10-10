@@ -48,3 +48,63 @@ ny_noaa_clean |>
   facet_grid(~month)
 ```
 
+
+## Problem 2
+
+Import and tidy accelerometer data.
+```{r}
+nhanes_accel = 
+  read_csv("data/nhanes_accel.csv") |>
+  janitor::clean_names()|>
+  pivot_longer(
+    cols = min1:ncol(),
+    names_to = "minute",
+    values_to = "")
+
+nhanes_covar = 
+  read_csv("data/nhanes_covar.csv", skip = 4) |>
+  janitor::clean_names()
+```
+
+
+## Problem 3
+
+Import and tidy citi bike data.
+```{r}
+jan_2020 = 
+  read_csv("data/citibike/Jan 2020 Citi.csv") |>
+  mutate(month = "january",
+         year = "2020")
+
+jan_2024 = 
+  read_csv("data/citibike/Jan 2024 Citi.csv")|>
+  mutate(month = "january",
+         year = "2024")
+
+jul_2020 = 
+  read_csv("data/citibike/July 2020 Citi.csv")|>
+  mutate(month = "july",
+         year = "2020")
+
+jul_2024 = 
+  read_csv("data/citibike/July 2024 Citi.csv")|>
+  mutate(month = "july",
+         year = "2024")
+
+citi_bike_df = 
+  bind_rows(jan_2020, jan_2024, jul_2020, jul_2024)
+```
+
+Describe the data
+
+```{r}
+citi_bike_df |>
+  group_by(duration, weekdays) |>
+  summarize()
+
+citi_bike_df |>
+  ggplot(aes(x = weekdays, duration, fill = member_casual)) +
+  geom_boxplot()
+```
+
+
