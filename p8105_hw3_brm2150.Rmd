@@ -8,6 +8,8 @@ output: github_document
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(p8105.datasets)
+library(ggridges)
+library(patchwork)
 
 knitr::opts_chunk$set(
   comment = '', fig.width = 5, fig.height = 5
@@ -35,17 +37,20 @@ ny_noaa_clean =
     )
 ```
 
-Make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
+Below is a two-panel plot showing the average max temperature in January and in July in each station across years. 
 ```{r}
-#ny_noaa_clean |>
- # filter(month == c("01", "07")) |>
- #   mutate(
- #   month = case_match(month, "01" ~ "January", "07" ~ "July")
- # ) |>
-  #ggplot(aes(x = day, y = tmin, color = year)) +
-  #geom_point(alpha = 0.2) +
-  #geom_smooth(se = FALSE, na.rm = TRUE) +
-  #facet_grid(~month)
+hex = 
+  ny_noaa_clean |> 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_hex()
+
+ridge = 
+  ny_noaa_clean |> 
+  filter(snow < 100, snow > 0) |>
+  ggplot(aes(x = snow, y = as.factor(year))) + 
+  geom_density_ridges()
+
+hex + ridge
 ```
 
 
@@ -76,11 +81,10 @@ nhanes_tidy =
       sex == 2 ~ "female"),
     sex = factor(sex),
     education = case_when(
-      education == 1 ~ "Below equivalent",
-      education == 2 ~ "HS equivalent",
+      education == 1 ~ "Below HS Equivalent",
+      education == 2 ~ "HS Equivalent",
       education == 3 ~ "Above HS"),
     education = factor(education),
-    minute = factor(minute),
     age = factor(age),
     seqn = factor(seqn)
      )
@@ -108,6 +112,39 @@ nhanes_tidy |>
   facet_grid(~education)
 ```
 
+Here we analyze the activity data from the accelerometers. First, I pivoted wider so that I could create a total activity variable. Below is a plot comparing the total activity among the variables `age`, `sex`, and `education`. From the plots below, we can see that women with at least a high school education are more active than their male counter parts at almost all ages. For people with high school equivalent education, the activity peaks at age 40 for women and about 35 for men, and then continues to decline as age increases. 
+
+```{r}
+nhanes_tidy |>
+  pivot_wider(
+    names_from = minute,
+    values_from = MIMS,
+    names_prefix = "min") |>
+  mutate(total_activity = rowSums(across(.cols = c(min1:min1440))))|>
+  relocate(seqn, sex,age,bmi,education,total_activity) |>
+  ggplot(aes(x = age, y = total_activity, color = sex)) +
+  geom_point(alpha = 0.5) + 
+  geom_smooth(aes(group = sex), se = FALSE) +
+  scale_x_discrete(breaks = c(20,30,40,50,60,70,80,90,100)) +
+  facet_grid(~factor(education, levels = c("Below HS Equivalent","HS Equivalent", "Above HS"))) +
+  labs(
+    title = "Total Activity from Accelerometers"
+  )
+```
+Make a graph with 3 panels to display 24-hour activity for each educational level and color to indicate sex. Add smoothing trends
+I made a three-panel plot to display the 24-hour data that was collected by the accelerometers. From the plots below, we can tell that most people start to get up and become active around and become less active around 7 or 8 o'clock. Again, the women with at least a high school degree show more activity throughout the entire day than the men. Both sexs with less than a High School education seem to have a peak activity around 10 in the morning and then slowly decline activiity throughout the day. 
+```{r}
+nhanes_tidy |>
+  mutate(time_of_day = as.numeric(minute)/60)|>
+  ggplot(aes(x = time_of_day, y = MIMS, color = sex)) +
+  geom_point(alpha = 0.01) +
+  geom_smooth(aes(group = sex))+
+  scale_y_continuous(limits = c(1,60))+
+  facet_grid(~factor(education, levels = c("Below HS Equivalent","HS Equivalent", "Above HS"))) +
+  labs(
+    title = "24-Hour Activity from Accelerometers"
+  )
+```
 
 
 ## Problem 3
