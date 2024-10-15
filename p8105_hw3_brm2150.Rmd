@@ -6,20 +6,20 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-  echo = TRUE,
-  fig.width = 6,
-  fig.height = 6)
-
 library(tidyverse)
 library(p8105.datasets)
-data("ny_noaa")
+
+knitr::opts_chunk$set(
+  comment = '', fig.width = 5, fig.height = 5
+)
 ```
 
 ## Problem 1
 
 Clean the `ny_noaa` data by separating the variables for year, month, and day. Ensure units for temp, precipitation, and snowfall. What is the most commonly observed values for snowfall and why?
 ```{r}
+data("ny_noaa")
+
 ny_noaa_clean = 
   ny_noaa |>
   filter(!if_any(prcp:tmin, is.na)) |>
@@ -37,15 +37,15 @@ ny_noaa_clean =
 
 Make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
 ```{r}
-ny_noaa_clean |>
-  filter(month == c("01", "07")) |>
-    mutate(
-    month = case_match(month, "01" ~ "January", "07" ~ "July")
-  ) |>
-  ggplot(aes(x = day, y = tmin, color = year)) +
+#ny_noaa_clean |>
+ # filter(month == c("01", "07")) |>
+ #   mutate(
+ #   month = case_match(month, "01" ~ "January", "07" ~ "July")
+ # ) |>
+  #ggplot(aes(x = day, y = tmin, color = year)) +
   #geom_point(alpha = 0.2) +
-  geom_smooth(se = FALSE, na.rm = TRUE) +
-  facet_grid(~month)
+  #geom_smooth(se = FALSE, na.rm = TRUE) +
+  #facet_grid(~month)
 ```
 
 
@@ -57,14 +57,57 @@ nhanes_accel =
   read_csv("data/nhanes_accel.csv") |>
   janitor::clean_names()|>
   pivot_longer(
-    cols = min1:ncol(),
+    cols = starts_with("min"),
     names_to = "minute",
-    values_to = "")
+    names_prefix = "min",
+    values_to = "MIMS")
 
 nhanes_covar = 
   read_csv("data/nhanes_covar.csv", skip = 4) |>
   janitor::clean_names()
+
+nhanes_tidy = 
+  left_join(nhanes_accel, nhanes_covar, by = "seqn")|>
+  filter(age>=21)|>
+  drop_na()|>
+  mutate(
+    sex = case_when(
+     sex == 1 ~ "male",
+      sex == 2 ~ "female"),
+    sex = factor(sex),
+    education = case_when(
+      education == 1 ~ "Below equivalent",
+      education == 2 ~ "HS equivalent",
+      education == 3 ~ "Above HS"),
+    education = factor(education),
+    minute = factor(minute),
+    age = factor(age),
+    seqn = factor(seqn)
+     )
 ```
+Reader friendly table for observing the number of men and women in each education category. 
+
+```{r}
+nhanes_tidy|>
+  group_by(sex, education) |>
+  summarize(
+    count = n()
+  ) |>
+  knitr::kable()
+```
+
+
+Create a visualization of the age distributions for men and women in each educational category. Comment on these
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+nhanes_tidy |>
+  distinct(seqn, .keep_all = TRUE) |>
+  select(age, sex, education)|>
+  ggplot(aes(x = age, fill = sex)) +
+  geom_density(alpha = 0.5) +
+  scale_x_discrete(breaks = c(20,30,40,50,60,70,80,90,100)) +
+  facet_grid(~education)
+```
+
 
 
 ## Problem 3
